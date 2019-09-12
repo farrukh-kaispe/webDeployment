@@ -36,8 +36,8 @@
         {
         "type": "Microsoft.ServiceBus/namespaces",
         "sku": {
-            "name": "Standard",
-            "tier": "Standard"
+            "name": "Basic",
+            "tier": "Basic"
         },
         "name": "[variables('serviceBus')]",
         "apiVersion": "[variables('sbVersion')]",
@@ -144,7 +144,7 @@
                         {
                             "name": "ServiceBusQueueRoute",
                             "source": "DeviceMessages",
-                            "condition": "level=\"critical\"",
+                            "condition": "true",
                             "endpointNames": [
                                 "[variables('serviceBusQueue_endpoint')]"
                                 ],
