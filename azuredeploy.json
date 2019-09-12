@@ -14,7 +14,11 @@
               ],
             "defaultValue": "East Asia"
             
-        }
+        },
+
+        "webApplicationSettings": {
+            "type": "object"
+          }
         
         
     },
@@ -278,23 +282,11 @@
                         "packageUri": "https://kspwebstorageaccount.blob.core.windows.net/kspwebstoragecontainer/AzurePortal-10-sep.zip?sp=r&st=2019-09-11T04:37:16Z&se=2019-09-30T12:37:16Z&spr=https&sv=2018-03-28&sig=lCOTWZ82mqIhP7nMTjZEnZiU3%2FD2VlmCg6Z1DuHEreY%3D&sr=b"
                     }
                 ]
+                
             }
-        },
-
-        {
-            "apiVersion": "2015-08-01",
-            "name": "variables(webAppName)",
-            "type": "config",
-            "dependsOn": [
-              "[resourceId('Microsoft.Web/Sites', variables('webAppName'))]"
-            ],
-            "properties": "[variables('iothubname')]"
-          }
+            
+        }
         
-        
-
-        
-
         
     ],
     "outputs": {
