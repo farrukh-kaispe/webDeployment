@@ -24,11 +24,43 @@
         "iotHubName": "[concat('IoTHub', uniqueString(resourceGroup().id))]",
         "streamingJob":"[concat('streamingJob', uniqueString(resourceGroup().id))]",
         "webAppName":"[concat('webApp', uniqueString(resourceGroup().id))]",
-        "appServiceName":"[concat('appService', uniqueString(resourceGroup().id))]"
-        
+        "appServiceName":"[concat('appService', uniqueString(resourceGroup().id))]",
+        "serviceBus": "[concat('serviceBus', uniqueString(resourceGroup().id))]",
+        "serviceBusQueue": "[concat('serviceBusQueue', uniqueString(resourceGroup().id))]",
+        "sbVersion": "2017-04-01",
+        "AuthRules_sb_queue":"AuthRules_sb_queue",
+        "serviceBusQueue_endpoint":"serviceBusQueue_endpoint",
+        "queueAuthorizationRuleResourceId": "[resourceId('Microsoft.ServiceBus/namespaces/queues/authorizationRules', variables('serviceBus'), variables('serviceBusQueue'), variables('AuthRules_sb_queue'))]"
     },
     "resources": [
-  
+        {
+        "type": "Microsoft.ServiceBus/namespaces",
+        "sku": {
+            "name": "Standard",
+            "tier": "Standard"
+        },
+        "name": "[variables('serviceBus')]",
+        "apiVersion": "[variables('sbVersion')]",
+        "location": "[parameters('location')]",
+        "properties": {
+            "provisioningState": "Succeeded",
+            "serviceBusEndpoint": "[concat('https://', variables('service_bus_namespace'),'.servicebus.windows.net:443/')]",
+            "status": "Active"
+        },
+        "dependsOn": []
+    },
+
+    {
+        "type": "Microsoft.ServiceBus/namespaces/queues",
+        "name": "[concat(variables('serviceBus'), '/', variables('serviceBusQueue'))]",
+        "apiVersion": "[variables('sbVersion')]",
+        "location": "[parameters('location')]",
+        "scale": null,
+        "properties": {},
+        "dependsOn": [
+            "[resourceId('Microsoft.ServiceBus/namespaces', variables('serviceBus'))]"
+        ]
+    },
         {
             "name": "[variables('storageAccountName')]",
             "type": "Microsoft.Storage/storageAccounts",
@@ -58,6 +90,10 @@
                 "tier": "Free",
                 "capacity": 1
             },
+            "dependsOn": [
+                "[resourceId('Microsoft.ServiceBus/namespaces', variables('serviceBus'))]",
+                "[resourceId('Microsoft.ServiceBus/namespaces/queues', variables('serviceBus'), variables('serviceBusQueue'))]"
+            ],
             "properties": {
                 "operationsMonitoringProperties": {
                     "events": {
@@ -95,12 +131,26 @@
                 },
                 "routing": {
                     "endpoints": {
-                        "serviceBusQueues": [],
+                        "serviceBusQueues": [{
+                            "connectionString": "[Concat('Endpoint=sb://',variables('serviceBus'),'.servicebus.windows.net/;SharedAccessKeyName=',variables('AuthRules_sb_queue'),';SharedAccessKey=',listkeys(variables('queueAuthorizationRuleResourceId'),variables('sbVersion')).primaryKey,';EntityPath=',variables('serviceBusQueue'))]",
+                            "name": "[variables('serviceBusQueue_endpoint')]",  
+                            "resourceGroup": "[resourceGroup().Name]"
+                        }],
                         "serviceBusTopics": [],
                         "eventHubs": [],
                         "storageContainers": []
                     },
-                    "routes": [],
+                    "routes": [
+                        {
+                            "name": "ServiceBusQueueRoute",
+                            "source": "DeviceMessages",
+                            "condition": "level=\"critical\"",
+                            "endpointNames": [
+                                "[variables('serviceBusQueue_endpoint')]"
+                                ],
+                            "isEnabled": true
+                        }
+                    ],
                     "fallbackRoute": {
                         "name": "$fallback",
                         "source": "DeviceMessages",
@@ -139,7 +189,22 @@
             }
         
         },
-        
+        {
+            "type": "Microsoft.ServiceBus/namespaces/queues/authorizationRules",
+            "name": "[concat(variables('serviceBus'), '/', variables('serviceBusQueue'), '/', variables('AuthRules_sb_queue'))]",
+            "apiVersion": "[variables('sbVersion')]",
+            "location": "[parameters('location')]",
+            "scale": null,
+            "properties": {
+                "rights": [
+                    "Send"
+                ]
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.ServiceBus/namespaces', variables('serviceBus'))]",
+                "[resourceId('Microsoft.ServiceBus/namespaces/queues', variables('serviceBus'), variables('serviceBusQueue'))]"
+            ]
+        },
         
         {
             "type": "Microsoft.StreamAnalytics/streamingjobs",
