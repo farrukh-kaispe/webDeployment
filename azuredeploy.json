@@ -290,11 +290,7 @@
         
     ],
     "outputs": {
-        "webAppURL" : {
-          
-          "type" : "string",
-          "value": "variables('webAppName')"
-        }
+        
       }
       
 }
