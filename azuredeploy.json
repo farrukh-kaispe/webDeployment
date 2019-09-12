@@ -283,7 +283,7 @@
 
         {
             "apiVersion": "2015-08-01",
-            "name": "web",
+            
             "type": "config",
             "dependsOn": [
               "[resourceId('Microsoft.Web/Sites', variables('webAppName'))]"
