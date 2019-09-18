@@ -288,7 +288,10 @@
         
     ],
     "outputs": {
-        
-      }
+        "siteUri": {
+          "type": "string",
+          "value": "[concat('https://',reference(resourceId('Microsoft.Web/sites', variables('webAppName'))).hostNames[0])]"
+        }
+     }
       
 }
